@@ -1,28 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
-import { MODEL_IMAGE_GENERATION, PROMPT_SPLIT_SUBJECT, PROMPT_SPLIT_BACKGROUND } from "../constants";
-
-// Initialize the client. 
-// NOTE: API Key must be set in Environment Variables (e.g., Vercel Project Settings)
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { PROMPT_SPLIT_SUBJECT, PROMPT_SPLIT_BACKGROUND, MODEL_IMAGE_GENERATION } from "../constants";
 
 /**
- * Generates an initial image based on a text prompt.
+ * Generates an initial image based on a text prompt using Gemini.
  */
 export const generateBaseImage = async (prompt: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   try {
     const response = await ai.models.generateContent({
       model: MODEL_IMAGE_GENERATION,
       contents: {
-        parts: [{ text: prompt }],
-      },
-      config: {
-        // Nano Banana does not support responseMimeType or responseSchema
-        // We rely on standard generation
+        parts: [
+          { text: prompt }
+        ]
       }
     });
 
-    // Extract image from response
-    // Iterate parts to find inlineData
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData && part.inlineData.data) {
@@ -39,10 +33,10 @@ export const generateBaseImage = async (prompt: string): Promise<string> => {
 };
 
 /**
- * edits an image to isolate the subject or background.
- * Effectively "splitting" the layer.
+ * Edits an image to isolate the subject or background using Gemini.
  */
 export const generateLayer = async (base64Image: string, type: 'SUBJECT' | 'BACKGROUND'): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = type === 'SUBJECT' ? PROMPT_SPLIT_SUBJECT : PROMPT_SPLIT_BACKGROUND;
 
   try {
@@ -51,16 +45,14 @@ export const generateLayer = async (base64Image: string, type: 'SUBJECT' | 'BACK
       contents: {
         parts: [
           {
-            text: prompt,
-          },
-          {
             inlineData: {
-              mimeType: 'image/png', // Assuming PNG for internal consistency
-              data: base64Image
+              data: base64Image,
+              mimeType: 'image/png'
             }
-          }
-        ],
-      },
+          },
+          { text: prompt }
+        ]
+      }
     });
 
     if (response.candidates?.[0]?.content?.parts) {

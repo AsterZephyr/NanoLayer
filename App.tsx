@@ -50,9 +50,17 @@ export default function App() {
       setLayers(prev => [newLayer, ...prev]);
       addMessage(MessageRole.MODEL, "I've generated the base creative based on your request. You can now split it into layers.");
     
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      addMessage(MessageRole.SYSTEM, "Sorry, I encountered an error generating the image. Please check your API Key configuration or try a different prompt.");
+      let errorMessage = "Sorry, I encountered an error generating the image.";
+      
+      if (error.message && error.message.includes("API Key")) {
+        errorMessage += " It seems the API Key is missing. Please check your Vercel Environment Variables (TUZI_API_KEY).";
+      } else {
+        errorMessage += " Please try a different prompt or check the console.";
+      }
+      
+      addMessage(MessageRole.SYSTEM, errorMessage);
     } finally {
       setGenerationState({ isGenerating: false, currentTask: null });
     }
