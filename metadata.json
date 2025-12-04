@@ -1,0 +1,5 @@
+{
+  "name": "NanoLayer",
+  "description": "A React application leveraging Gemini Nano Banana models to generate ad creatives and intelligently split them into subject and background layers.",
+  "requestFramePermissions": []
+}
